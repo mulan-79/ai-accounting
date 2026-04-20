@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, Menu, X } from 'lucide-react';
+import { Sparkles, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { signOut } from '../lib/auth';
+import AuthModal from './AuthModal';
 
 const NavLink = ({ to, label, onClick }) => {
   const { pathname } = useLocation();
@@ -26,9 +29,7 @@ const MobileNavLink = ({ to, label, onClick }) => {
       to={to}
       onClick={onClick}
       className={`block px-4 py-3 text-base font-medium rounded-lg transition ${
-        active
-          ? 'text-blue-900 bg-blue-50'
-          : 'text-slate-700 hover:bg-slate-50'
+        active ? 'text-blue-900 bg-blue-50' : 'text-slate-700 hover:bg-slate-50'
       }`}
     >
       {label}
@@ -38,7 +39,17 @@ const MobileNavLink = ({ to, label, onClick }) => {
 
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { user, role, loading } = useAuth();
   const close = () => setMobileOpen(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    setUserMenuOpen(false);
+  };
+
+  const displayName = user?.displayName || user?.email?.split('@')[0] || '사용자';
 
   return (
     <>
@@ -60,12 +71,48 @@ export default function Nav() {
             <NavLink to="/cases" label="Case Study" />
             <NavLink to="/submit" label="사례 제보" />
             <NavLink to="/about" label="소개" />
+            {role === 'admin' && <NavLink to="/admin" label="관리자" />}
           </div>
 
-          {/* 데스크톱 CTA */}
-          <button className="hidden md:block px-4 py-2 bg-blue-900 text-white text-sm font-medium rounded-md hover:bg-blue-800 transition">
-            뉴스레터 구독
-          </button>
+          {/* 데스크톱 우측 */}
+          <div className="hidden md:flex items-center gap-2">
+            {!loading && (
+              user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setUserMenuOpen((v) => !v)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-100 transition text-sm font-medium text-slate-700"
+                  >
+                    <div className="w-7 h-7 bg-blue-900 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      {displayName[0].toUpperCase()}
+                    </div>
+                    {displayName}
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  </button>
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-50">
+                      <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100">
+                        {user.email}
+                      </div>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition"
+                      >
+                        <LogOut className="w-4 h-4" /> 로그아웃
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuth(true)}
+                  className="px-4 py-2 bg-blue-900 text-white text-sm font-medium rounded-md hover:bg-blue-800 transition"
+                >
+                  로그인
+                </button>
+              )
+            )}
+          </div>
 
           {/* 모바일 햄버거 */}
           <button
@@ -86,17 +133,38 @@ export default function Nav() {
             <MobileNavLink to="/cases" label="Case Study" onClick={close} />
             <MobileNavLink to="/submit" label="사례 제보" onClick={close} />
             <MobileNavLink to="/about" label="소개" onClick={close} />
+            {role === 'admin' && <MobileNavLink to="/admin" label="관리자" onClick={close} />}
           </div>
-          <div className="px-4 border-t border-slate-100 pt-4">
-            <button
-              onClick={close}
-              className="w-full py-3 bg-blue-900 text-white text-sm font-medium rounded-md hover:bg-blue-800 transition"
-            >
-              뉴스레터 구독
-            </button>
+          <div className="px-4 border-t border-slate-100 pt-4 space-y-2">
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600">
+                  <div className="w-7 h-7 bg-blue-900 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    {displayName[0].toUpperCase()}
+                  </div>
+                  {displayName}
+                </div>
+                <button
+                  onClick={() => { handleSignOut(); close(); }}
+                  className="w-full flex items-center justify-center gap-2 py-3 border border-slate-300 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-50 transition"
+                >
+                  <LogOut className="w-4 h-4" /> 로그아웃
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => { setShowAuth(true); close(); }}
+                className="w-full py-3 bg-blue-900 text-white text-sm font-medium rounded-md hover:bg-blue-800 transition"
+              >
+                로그인 / 회원가입
+              </button>
+            )}
           </div>
         </div>
       )}
+
+      {/* 로그인 모달 */}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </>
   );
 }
