@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import HowtoPage from './pages/HowtoPage';
 import GuideDetailPage from './pages/GuideDetailPage';
@@ -8,6 +9,7 @@ import CasesPage from './pages/CasesPage';
 import CaseDetailPage from './pages/CaseDetailPage';
 import SubmitPage from './pages/SubmitPage';
 import AboutPage from './pages/AboutPage';
+import AdminPage from './pages/AdminPage';
 
 export default function App() {
   return (
@@ -23,6 +25,11 @@ export default function App() {
             <Route path="/cases/:slug" element={<CaseDetailPage />} />
             <Route path="/submit" element={<SubmitPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminPage />
+              </ProtectedRoute>
+            } />
           </Routes>
         </main>
         <Footer />
