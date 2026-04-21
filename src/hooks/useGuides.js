@@ -19,7 +19,7 @@ export function useGuides({ category, limitCount } = {}) {
   useEffect(() => {
     async function fetch() {
       try {
-        const constraints = [orderBy('publishedAt', 'desc')];
+        const constraints = [orderBy('order', 'asc')];
         if (category && category !== '전체') {
           constraints.unshift(where('category', '==', category));
         }
