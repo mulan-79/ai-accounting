@@ -5,7 +5,12 @@ const components = {
   h1: ({ children }) => <h1 className="text-2xl font-bold text-slate-900 mt-10 mb-4 tracking-tight">{children}</h1>,
   h2: ({ children }) => <h2 className="text-xl font-bold text-slate-900 mt-8 mb-3 tracking-tight">{children}</h2>,
   h3: ({ children }) => <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-2">{children}</h3>,
-  p:  ({ children }) => <p className="text-slate-700 leading-relaxed mb-4">{children}</p>,
+  p: ({ children, node }) => {
+    // 이미지만 있는 단락은 <p> 대신 <div>로 감싸 HTML 구조 충돌 방지
+    const hasImg = node?.children?.some(c => c.tagName === 'img');
+    if (hasImg) return <div className="mb-4">{children}</div>;
+    return <p className="text-slate-700 leading-relaxed mb-4">{children}</p>;
+  },
   ul: ({ children }) => <ul className="list-disc list-inside space-y-1.5 mb-4 text-slate-700">{children}</ul>,
   ol: ({ children }) => <ol className="list-decimal list-inside space-y-1.5 mb-4 text-slate-700">{children}</ol>,
   li: ({ children }) => <li className="leading-relaxed">{children}</li>,
