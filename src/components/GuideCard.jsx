@@ -1,30 +1,50 @@
 import { Link } from 'react-router-dom';
-import { Clock } from 'lucide-react';
+import { Clock, ArrowRight } from 'lucide-react';
 import { formatDate } from '../lib/utils';
 
 export default function GuideCard({ guide, index = 0 }) {
   const displayDate = guide.date || formatDate(guide.publishedAt);
 
   return (
-    <Link to={`/howto/${guide.slug || guide.id}`} className="group block">
-      <div className="aspect-[16/10] bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg mb-4 p-5 flex items-end relative overflow-hidden">
-        <div className="absolute top-4 right-4 text-white/20 text-6xl font-bold">
-          {String(index + 1).padStart(2, '0')}
+    <Link
+      to={`/howto/${guide.slug || guide.id}`}
+      className="group flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-blue-300 hover:shadow-lg transition-all duration-200"
+    >
+      {/* 상단 강조 바 */}
+      <div className="h-1 bg-blue-900 group-hover:bg-blue-700 transition-colors" />
+
+      <div className="flex flex-col flex-1 p-6">
+        {/* 번호 + 카테고리 */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full">
+            {guide.category}
+          </span>
+          <span className="text-2xl font-bold text-slate-100 select-none tabular-nums">
+            {String(index + 1).padStart(2, '0')}
+          </span>
         </div>
-        <span className="text-xs font-medium text-white bg-white/10 backdrop-blur px-2.5 py-1 rounded-full border border-white/20">
-          {guide.category}
-        </span>
-      </div>
-      <h3 className="text-lg font-bold text-slate-900 mb-2 leading-snug group-hover:text-blue-900 transition">
-        {guide.title}
-      </h3>
-      <p className="text-sm text-slate-600 leading-relaxed mb-3">{guide.excerpt}</p>
-      <div className="flex items-center gap-3 text-xs text-slate-500">
-        <span className="flex items-center gap-1">
-          <Clock className="w-3 h-3" /> {guide.readTime}
-        </span>
-        <span>·</span>
-        <span>{displayDate}</span>
+
+        {/* 제목 */}
+        <h3 className="text-base font-bold text-slate-900 mb-2 leading-snug group-hover:text-blue-900 transition-colors">
+          {guide.title}
+        </h3>
+
+        {/* 요약 */}
+        <p className="text-sm text-slate-500 leading-relaxed flex-1 line-clamp-3">
+          {guide.excerpt}
+        </p>
+
+        {/* 메타 + 화살표 */}
+        <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-2.5 text-xs text-slate-400">
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" /> {guide.readTime}
+            </span>
+            <span>·</span>
+            <span>{displayDate}</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+        </div>
       </div>
     </Link>
   );
