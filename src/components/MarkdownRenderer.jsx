@@ -28,6 +28,19 @@ const components = {
       className="text-blue-900 underline underline-offset-2 hover:text-blue-700">{children}</a>
   ),
   hr: () => <hr className="border-slate-200 my-8" />,
+  img: ({ src, alt }) => (
+    <span className="block my-6">
+      <img
+        src={src}
+        alt={alt}
+        className="w-full rounded-xl border border-slate-200 shadow-sm"
+        loading="lazy"
+      />
+      {alt && (
+        <span className="block text-center text-xs text-slate-400 mt-2">{alt}</span>
+      )}
+    </span>
+  ),
   // 표 렌더링
   table: ({ children }) => (
     <div className="overflow-x-auto my-6">
