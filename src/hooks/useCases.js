@@ -19,7 +19,7 @@ export function useCases({ industry, limitCount } = {}) {
   useEffect(() => {
     async function fetch() {
       try {
-        const constraints = [orderBy('order', 'desc')];
+        const constraints = [orderBy('order', 'asc')];
         if (industry && industry !== '전체') {
           constraints.unshift(where('industry', '==', industry));
         }
