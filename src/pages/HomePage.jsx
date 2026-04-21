@@ -4,6 +4,7 @@ import GuideCard from '../components/GuideCard';
 import CaseCard from '../components/CaseCard';
 import { useGuides } from '../hooks/useGuides';
 import { useCases } from '../hooks/useCases';
+import { useStats } from '../hooks/useStats';
 
 const Stat = ({ number, label }) => (
   <div>
@@ -31,6 +32,7 @@ const PillarCard = ({ icon, title, desc, to }) => (
 export default function HomePage() {
   const { guides, loading: guidesLoading } = useGuides({ limitCount: 3 });
   const { cases, loading: casesLoading } = useCases({ limitCount: 4 });
+  const { stats, loading: statsLoading } = useStats();
 
   return (
     <div>
@@ -67,9 +69,9 @@ export default function HomePage() {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-6 mt-16 pt-8 border-t border-slate-200">
-            <Stat number="23" label="공개된 자동화 레시피" />
-            <Stat number="47" label="공유된 실무 케이스" />
-            <Stat number="12" label="참여 기업" />
+            <Stat number={statsLoading ? '—' : stats.guides} label="공개된 자동화 레시피" />
+            <Stat number={statsLoading ? '—' : stats.cases} label="공유된 실무 케이스" />
+            <Stat number={statsLoading ? '—' : stats.submissions} label="접수된 사례 제보" />
           </div>
         </div>
       </section>
