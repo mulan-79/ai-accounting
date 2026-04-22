@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getCountFromServer } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 export function useStats() {
@@ -10,17 +10,17 @@ export function useStats() {
     async function fetch() {
       try {
         const [guidesSnap, casesSnap, submissionsSnap] = await Promise.all([
-          getCountFromServer(collection(db, 'guides')),
-          getCountFromServer(collection(db, 'cases')),
-          getCountFromServer(collection(db, 'submissions')),
+          getDocs(collection(db, 'guides')),
+          getDocs(collection(db, 'cases')),
+          getDocs(collection(db, 'submissions')),
         ]);
         setStats({
-          guides: guidesSnap.data().count,
-          cases: casesSnap.data().count,
-          submissions: submissionsSnap.data().count,
+          guides: guidesSnap.size,
+          cases: casesSnap.size,
+          submissions: submissionsSnap.size,
         });
       } catch (e) {
-        console.error(e);
+        console.error('stats fetch error:', e);
       } finally {
         setLoading(false);
       }
