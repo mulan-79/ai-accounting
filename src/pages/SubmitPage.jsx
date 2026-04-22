@@ -161,7 +161,7 @@ export default function SubmitPage() {
             <FormField name="submitterRole" label="직책" placeholder="재무팀 과장"
               value={form.submitterRole} onChange={handleChange} />
           </div>
-          <FormField name="submitterEmail" label="이메일" placeholder={user.email}
+          <FormField name="submitterEmail" label="이메일" placeholder="예: hong@company.com"
             value={form.submitterEmail} onChange={handleChange} />
         </div>
 
