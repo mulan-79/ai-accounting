@@ -140,7 +140,7 @@ export default function SubmitPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-slate-200 rounded-xl p-8">
         <FormField required name="company" label="회사명 (익명 처리 가능)"
-          placeholder="예: 대원제약 또는 '익명 제약사'" value={form.company} onChange={handleChange} />
+          placeholder="예: **제약 또는 '익명 제약사'" value={form.company} onChange={handleChange} />
         <FormField required name="industry" label="산업군"
           placeholder="예: 제약, 제조, IT, 유통" value={form.industry} onChange={handleChange} />
         <FormField required name="title" label="자동화한 업무"
