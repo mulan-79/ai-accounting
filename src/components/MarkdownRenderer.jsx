@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Link } from 'react-router-dom';
 
 const components = {
   h1: ({ children }) => <h1 className="text-2xl font-bold text-slate-900 mt-10 mb-4 tracking-tight">{children}</h1>,
@@ -28,10 +29,20 @@ const components = {
       </pre>
     ),
   strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
-  a: ({ href, children }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer"
-      className="text-blue-900 underline underline-offset-2 hover:text-blue-700">{children}</a>
-  ),
+  a: ({ href, children }) => {
+    const isInternal = href && (href.startsWith('/') || href.startsWith('#'));
+    if (isInternal) {
+      return (
+        <Link to={href} className="text-blue-900 underline underline-offset-2 hover:text-blue-700">
+          {children}
+        </Link>
+      );
+    }
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer"
+        className="text-blue-900 underline underline-offset-2 hover:text-blue-700">{children}</a>
+    );
+  },
   hr: () => <hr className="border-slate-200 my-8" />,
   img: ({ src, alt }) => (
     <span className="block my-6">
