@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -14,9 +14,19 @@ import AdminPage from './pages/AdminPage';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
+
+  // 브라우저의 자동 스크롤 복원 비활성화 (최초 1회)
   useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // paint 전에 실행(useLayoutEffect)해서 스크롤 깜빡임 방지
+  useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
   return null;
 }
 
