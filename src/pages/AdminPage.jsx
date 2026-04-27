@@ -60,24 +60,33 @@ const STATUS_TABS = [
 ];
 
 function SubmissionsTab() {
-  const [activeTab, setActiveTab]   = useState('pending');
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [expandedId, setExpandedId] = useState(null);
+  const [activeTab, setActiveTab]     = useState('pending');
+  const [allSubs, setAllSubs]         = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [expandedId, setExpandedId]   = useState(null);
   const [reviewNotes, setReviewNotes] = useState({});
-  const [processing, setProcessing] = useState(null);
+  const [processing, setProcessing]   = useState(null);
 
-  const fetch = async (status) => {
+  // 인덱스 불필요 — 전체 로드 후 클라이언트 필터링
+  const loadAll = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'submissions'),
-        where('status', '==', status), orderBy('submittedAt', 'desc'));
-      const snap = await getDocs(q);
-      setSubmissions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const snap = await getDocs(collection(db, 'submissions'));
+      const docs = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.submittedAt?.toDate?.() ?? new Date(a.submittedAt ?? 0);
+          const tb = b.submittedAt?.toDate?.() ?? new Date(b.submittedAt ?? 0);
+          return tb - ta;
+        });
+      setAllSubs(docs);
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetch(activeTab); setExpandedId(null); }, [activeTab]);
+  useEffect(() => { loadAll(); }, []);
+  useEffect(() => { setExpandedId(null); }, [activeTab]);
+
+  const submissions = allSubs.filter(s => (s.status || 'pending') === activeTab);
 
   const handleApprove = async (sub) => {
     setProcessing(sub.id);
@@ -96,7 +105,7 @@ function SubmissionsTab() {
         isAnonymous: sub.isAnonymous || false,
         publishedAt: serverTimestamp(), submissionId: sub.id,
       });
-      setSubmissions(p => p.filter(s => s.id !== sub.id));
+      await loadAll();
     } catch { alert('처리 중 오류가 발생했습니다.'); }
     finally { setProcessing(null); }
   };
@@ -108,7 +117,7 @@ function SubmissionsTab() {
       await updateDoc(doc(db, 'submissions', sub.id), {
         status: 'rejected', reviewNotes: reviewNotes[sub.id], reviewedAt: serverTimestamp(),
       });
-      setSubmissions(p => p.filter(s => s.id !== sub.id));
+      await loadAll();
     } catch { alert('처리 중 오류가 발생했습니다.'); }
     finally { setProcessing(null); }
   };
