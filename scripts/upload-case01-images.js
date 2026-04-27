@@ -1,0 +1,221 @@
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getStorage } from 'firebase-admin/storage';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { createRequire } from 'module';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const require = createRequire(import.meta.url);
+const serviceAccount = require('./serviceAccountKey.json');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+initializeApp({
+  credential: cert(serviceAccount),
+  storageBucket: 'ai-accounting-adedf.appspot.com',
+});
+
+const storage = getStorage();
+const db = getFirestore();
+
+const images = [
+  { file: 'case01_img1_excel.png',  dest: 'cases/case01/img1_excel.png',  mime: 'image/png' },
+  { file: 'case01_img2_chat.png',   dest: 'cases/case01/img2_chat.png',   mime: 'image/png' },
+  { file: 'case01_img3_report.png', dest: 'cases/case01/img3_report.png', mime: 'image/png' },
+];
+
+async function uploadImage({ file, dest, mime }) {
+  const filePath = join(__dirname, 'case-images', file);
+  const fileBuffer = readFileSync(filePath);
+  const bucket = storage.bucket();
+  const fileRef = bucket.file(dest);
+
+  await fileRef.save(fileBuffer, {
+    metadata: { contentType: mime },
+    public: true,
+  });
+
+  const url = `https://storage.googleapis.com/${bucket.name}/${dest}`;
+  console.log(`✅  업로드 완료: ${url}`);
+  return url;
+}
+
+async function run() {
+  console.log('📤  이미지 업로드 시작...\n');
+
+  const urls = {};
+  for (const img of images) {
+    const url = await uploadImage(img);
+    urls[img.file] = url;
+  }
+
+  console.log('\n🖼️  URL 목록:');
+  for (const [file, url] of Object.entries(urls)) {
+    console.log(`  ${file}: ${url}`);
+  }
+
+  // 케이스 스터디 본문 (이미지 URL 삽입)
+  const content = `# AI로 한 장짜리 임원 보고서 만들기
+## 케이스 스터디 01 — 회계법인 선정 검토 보고서를 AI로 20분 만에 완성한 방법
+
+---
+
+## 어떤 상황이었나
+
+K팀장의 팀에서는 외부 회계법인 선정이 필요한 시점이 왔다. IFRS 18 도입(2026년 기말 적용)과 연결 PA 서비스를 동시에 맡길 법인을 뽑아야 했고, 최종적으로 4개 후보사에 RFP를 발송했다.
+
+- **빅4 후보:** A회계법인, B회계법인
+- **로컬 후보:** C회계법인, D회계법인
+
+검토 방향은 두 가지였다.
+
+- **(1안)** 빅4 단독 — IFRS 18 도입 + 연결 PA 통합 수행
+- **(2안)** 빅4 + 로컬 분리 — 빅4는 IFRS 18만, 연결 PA는 로컬에서 별도 수행
+
+이 내용을 CFO에게 보고해야 했다. **A4 한 장, 의사결정 요청 형식**으로.
+
+---
+
+## 기존 방식의 문제
+
+예전 같으면 이런 순서였다.
+
+1. 지난 유사 보고서 파일을 찾아서 열기
+2. 양식 복사 후 내용 수정
+3. 표 정렬, 폰트 통일, 여백 조정 반복
+4. 팀장 검토 → 수정 → 재검토
+
+단순해 보이지만 실제로는 **양식 맞추는 데만 1~2시간**이 걸렸다. 특히 비교표가 들어가는 보고서는 셀 크기, 음영, 폰트 크기를 맞추다가 시간이 다 가버렸다.
+
+---
+
+## Step 1. 엑셀로 핵심 내용 정리
+
+보고서를 만들기 전, 먼저 검토할 내용을 엑셀에 간단히 정리했다. 현황, IFRS 18 도입 필요사항, 두 가지 방안의 장단점까지 — 완성된 문장이 아니어도 된다. **핵심 키워드와 구조만 잡아두면 충분하다.**
+
+![엑셀 정리 화면](${urls['case01_img1_excel.png']})
+
+> 💡 **포인트:** 엑셀 내용이 완벽할 필요는 없다. AI가 문장으로 다듬어주기 때문에, 키워드와 수치 위주로 빠르게 정리하는 것으로 충분하다.
+
+---
+
+## Step 2. Claude에 보고서 작성 요청
+
+정리한 엑셀 내용을 Claude에 붙여넣고, 임원 보고서 스킬을 활용해 Word 파일 생성을 요청했다.
+
+![Claude 채팅 요청 화면](${urls['case01_img2_chat.png']})
+
+**실제 사용한 프롬프트**
+
+\`\`\`
+해당 내용을 임원보고자료로 한 페이지 보고서를 만들어줘.
+워드파일로 만들어줘.
+\`\`\`
+
+프롬프트는 이게 전부다. 길게 설명하지 않아도 된다. **Claude에 사전 등록된 임원 보고서 스킬이 양식, 톤, 구성 기준을 자동으로 적용**하기 때문이다.
+
+Claude가 실행한 작업은 세 단계였다.
+
+1. 명령 3개 실행 (스킬 로드 → 파일 조회 → 파일 생성)
+2. 보고서 구성 자동 결정
+   - 제목 헤더: 네이비 배경 타이틀 + 날짜/부서 표기
+   - 1. 현황: PA 계약 현황 표 형태 정리
+   - 2. IFRS 18 도입: 필요사항 항목 정리
+   - 3. PA 활용 방안: 통합 진행 전제 하이라이트 + 두 가지 옵션 비교표 (장단점)
+3. Word 파일(.docx) 자동 생성 및 저장
+
+**소요 시간: 약 40초**
+
+---
+
+## Step 3. 완성된 보고서 확인
+
+![완성된 임원 보고서](${urls['case01_img3_report.png']})
+
+생성된 보고서의 구성은 다음과 같다.
+
+**1. 현황 (연결 PA 계약 현황)**
+현재 각 계열사별 연결 PA 계약 법인과 금액을 표 형태로 정리. 각주까지 자동으로 포함됐다.
+
+**2. 26년도 IFRS 18 도입 — 재무제표 변경 필요사항**
+① 26년 기말 재무제표부터 IFRS 18호 도입된 손익계산서 공시 필요
+② 재무제표 구조변경 필요 사항 정리
+
+**3. 26년도 PA 활용 방안 — 비교 검토**
+
+노란색 하이라이트 박스로 핵심 전제를 강조하고, 두 가지 옵션을 표로 비교했다.
+
+| 구분 | (1) 빅4: IFRS18 도입 + 연결 PA | (2) 빅4: IFRS18 도입 / 로컬: 연결 PA |
+|------|-------------------------------|--------------------------------------|
+| 장점 | PA 응역을 바탕으로 노하우를 지닌 법인에서 IFRS18 응역 시 계정분류 명확 | 로컬 PA 진행 시 담당자가 끝까지 책임지며 지속성·대응 가능, 빅4 대비 낮은 가격 |
+| 단점 | 높은 가격, PA 담당자가 주니어이며 적극적인 대응이 힘들 수 있음 (인원교체 등) | IFRS18 용역과 연결 PA가 별도 법인으로 18호 도입 시 상호보완이 어려울 수 있음 |
+
+---
+
+## 스킬이 없었다면 어땠을까
+
+스킬 없이 같은 보고서를 요청했을 때와 비교하면 차이가 명확하다.
+
+| 구분 | 스킬 없이 | 스킬 적용 후 |
+|------|----------|------------|
+| 보고서 양식 | 매번 프롬프트에 상세 설명 필요 | 자동 적용 |
+| 헤더 스타일 | 일반 텍스트 수준 | 네이비 헤더 + 하이라이트 박스 |
+| 비교표 디자인 | 단순 표 | 장단점 구조화 자동 적용 |
+| 초안 완성까지 | 15~20분 + 수정 반복 | 40초, 수정 1회 이내 |
+
+---
+
+## 결과와 성과
+
+| 항목 | 기존 방식 | AI 활용 후 |
+|------|----------|-----------|
+| 보고서 초안 완성 | 1~2시간 | 40초 |
+| 수정 횟수 | 평균 3회 | 1회 이내 |
+| 양식 일관성 | 담당자마다 다름 | 스킬로 항상 동일 |
+| 최종 검토 집중도 | 양식 수정에 에너지 소모 | 내용 판단에만 집중 |
+
+---
+
+## 이 케이스에서 얻을 수 있는 인사이트
+
+**1. 프롬프트는 짧아도 된다.**
+"한 페이지 보고서 만들어줘. 워드파일로." 이게 전부였다. 스킬에 양식과 기준이 담겨 있으면, 프롬프트에는 이번 건의 내용만 넣으면 된다.
+
+**2. 완성된 문장이 없어도 된다.**
+엑셀에 키워드와 수치만 정리했는데도 AI가 임원 보고 톤의 문장으로 자동 변환했다. 초안 작성의 가장 큰 허들인 "어떻게 써야 하나"를 AI가 해결해준다.
+
+**3. 스킬은 팀 전체의 자산이다.**
+한 번 만들어두면 팀원 누구나 같은 양식으로 보고서를 만들 수 있다. 팀장이 매번 양식을 잡아줄 필요가 없어진다.
+
+---
+
+## 마치며
+
+이 케이스는 방식 1 — AI 채팅 + Skills의 전형적인 활용 사례다. 복잡한 도구도, 코딩도 필요 없다. 엑셀에 내용을 정리하고 Claude에 한 줄 요청하면, 40초 만에 임원 보고용 Word 파일이 완성된다.
+
+다음 케이스에서는 Cowork를 활용해 ERP 데이터를 자동으로 정리하고 보고서까지 완성한 사례를 다룬다.
+
+---
+
+*관련 글: [방식 1 상세] AI 채팅 + Skills로 결산 보고서 자동 작성하기*`;
+
+  await db.collection('cases').doc('case01-executive-report-ai').set({
+    title: 'AI로 한 장짜리 임원 보고서 만들기',
+    slug: 'case01-executive-report-ai',
+    excerpt: '회계법인 선정 검토 보고서를 AI로 20분 만에 완성한 방법. 엑셀에 키워드만 정리하고 Claude에 한 줄 요청했더니 40초 만에 임원 보고용 Word 파일이 나왔다.',
+    industry: '제약/재무',
+    impact: '보고서 작성 1~2시간 → 40초',
+    tags: ['AI채팅', 'Skills', '임원보고서', 'IFRS18', 'Word자동생성'],
+    author: 'K팀장',
+    company: '제약회사 재무팀',
+    method: '방식1',
+    content,
+    publishedAt: Timestamp.now(),
+    order: 1,
+  });
+
+  console.log('\n✅  cases/case01-executive-report-ai 저장 완료');
+  process.exit(0);
+}
+
+run().catch(e => { console.error(e); process.exit(1); });
