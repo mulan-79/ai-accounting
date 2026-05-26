@@ -276,12 +276,20 @@ Top 3 추천 방식은 97% 케이스를 커버했지만 나머지 3%가 남았�
 카드내역 조회 시스템에서 엑셀 다운로드
               ↓
 사이트에 엑셀 업로드
+
+![엑셀 업로드 화면](/images/cases/case11_img1_upload.png)
+
               ↓
 적요목적 확인
+
+![적요목적 편집 화면](/images/cases/case11_img2_edit.png)
 (1순위가 미리 선택 → 대부분 엔터만 치면 통과)
 (접대비·차량 해당 건만 체크박스 클릭)
               ↓
 전표 미리보기 확인
+
+![전표 미리보기 화면](/images/cases/case11_img3_preview.png)
+
               ↓
 SAP 업로드 양식으로 다운로드 → 일괄 업로드
 
@@ -345,7 +353,11 @@ const doc = {
   tags: ['SAP', '법인카드', '전표자동화', '계정과목', '세금코드', 'Cloudflare', 'GitHub Actions', 'Claude Code'],
   impact: '월 2~3일 수동 전표 등록 → 검토 및 클릭 수십 분',
   order: 11,
-  images: [],
+  images: [
+    { id: 'case11_img1_upload', url: '/images/cases/case11_img1_upload.png', alt: '엑셀 업로드 화면' },
+    { id: 'case11_img2_edit', url: '/images/cases/case11_img2_edit.png', alt: '적요목적 편집 화면' },
+    { id: 'case11_img3_preview', url: '/images/cases/case11_img3_preview.png', alt: '전표 미리보기 화면' },
+  ],
   content,
   status: 'published',
   submittedAt: Timestamp.now(),
