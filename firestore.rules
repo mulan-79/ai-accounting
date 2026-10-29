@@ -20,21 +20,21 @@ service cloud.firestore {
       );
     }
 
-    // ── guides: 공개 읽기, 에디터 이상 쓰기 ──
+    // ── guides: 운영 중단 — 읽기 차단 (에디터만 허용) ──
     match /guides/{guideId} {
-      allow read: if true;
+      allow read: if isEditor();
       allow create, update, delete: if isEditor();
     }
 
-    // ── cases: 공개 읽기, 에디터 이상 쓰기 ──
+    // ── cases: 운영 중단 — 읽기 차단 (에디터만 허용) ──
     match /cases/{caseId} {
-      allow read: if true;
+      allow read: if isEditor();
       allow create, update, delete: if isEditor();
     }
 
-    // ── submissions: 본인 생성·조회, admin/editor 전체 read/write ──
+    // ── submissions: 운영 중단 — 신규 제보 접수 차단 ──
     match /submissions/{submissionId} {
-      allow create: if isSignedIn();
+      allow create: if false;
       allow read: if isEditor() ||
         (isSignedIn() && resource.data.submitterUid == request.auth.uid);
       allow update, delete: if isEditor();
