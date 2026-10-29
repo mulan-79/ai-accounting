@@ -1,0 +1,17 @@
+{
+  "ZtwoaTuZNmSKbEHdjZiE": {
+    "company": "익명 제약사",
+    "industry": "제약",
+    "title": "계정원장 추출",
+    "tools": "claude",
+    "implementation": "1. 추출하려는 계정 코드 입력(다 수), 조회 기간 입력 후 엔터\n2. SAP 자동 로그인 (ID/PW 메모장 입력)\n3. fagll03 접속 하여 각 계정원장 다운로드, 완전성 검토 캡처\n4. 각 계정명(코드)로 계정원장 및 완전성 검토자료 추출",
+    "impact": "",
+    "submitterName": "김동진",
+    "submitterEmail": "kdj4758@daewonpharm.com",
+    "submitterRole": "재무팀 매니저",
+    "isAnonymous": true,
+    "submitterUid": "kzbP2UbR9icdfdclzTNT8uXnh922",
+    "status": "pending",
+    "submittedAt": "2026-04-24T06:07:10.914Z"
+  }
+}

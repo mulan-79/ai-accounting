@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 헬퍼 함수
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isEditor() {
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor' ||
+        isAdmin()
+      );
+    }
+
+    // ── guides: 공개 읽기, 에디터 이상 쓰기 ──
+    match /guides/{guideId} {
+      allow read: if true;
+      allow create, update, delete: if isEditor();
+    }
+
+    // ── cases: 공개 읽기, 에디터 이상 쓰기 ──
+    match /cases/{caseId} {
+      allow read: if true;
+      allow create, update, delete: if isEditor();
+    }
+
+    // ── submissions: 본인 생성·조회, admin/editor 전체 read/write ──
+    match /submissions/{submissionId} {
+      allow create: if isSignedIn();
+      allow read: if isEditor() ||
+        (isSignedIn() && resource.data.submitterUid == request.auth.uid);
+      allow update, delete: if isEditor();
+    }
+
+    // ── users: 본인 read, admin이 role 변경 ──
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isAdmin() ||
+        (isSignedIn() && request.auth.uid == userId &&
+         !('role' in request.resource.data));  // 본인은 role 변경 불가
+      allow delete: if isAdmin();
+    }
+  }
+}
